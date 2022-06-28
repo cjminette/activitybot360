@@ -1,5 +1,13 @@
 /*  
-* Navigator with IR and PING))) sensors 
+* Master program for 2022 Dakota Dreams Camp
+* 
+* This program includes different "fun" functions that students can call to 
+* make the robot perform a variety of tasks, such as driving around without 
+* hitting obstacles, playing a song, and following an object.  The structure of
+* this program allows students to experience choosing actions for the robot 
+* without needing to understand all the details required to perform those actions.
+* 
+* 
 */ 
 #include "simpletools.h"                    // Include simpletools   
 #include "abdrive360.h"                  
@@ -51,11 +59,14 @@ void sing_and_dance();
 void follow(volatile int time);
 void magic_beeps(volatile int time);
 void piano_bot(volatile int time);
+void drive_square(int side_length);
+void drive_3squares(int longest_side_length);
  
 int main() 
 { 
   ticker = 0;
-  cog = cog_run(timer, 128);
+  // Run a timer on a separate processor for timed activities
+  cog = cog_run(timer, 128);  
   
   /* 
   Examples: 
@@ -70,9 +81,14 @@ int main()
   magic_beeps(20);   // Play different tones based on ultrasonic sensor distance
   pause(500);
   piano_bot(30);     // Play different tones based on which sensor is triggered
-  
+  pause(500);
+  drive_square(50);  // Drive in a square, where each side is 50 ticks long
+  pause(500);
+  drive_3squares(120); // Drive in 3 consecutively smaller squares, where the
+                       // longest side is 120 ticks long
+                       
+                       
   //Put your code below! Call any of the fun functions you want!*/
-
   
   
 
@@ -93,7 +109,7 @@ void drive_around(int time)
 {
   int drive_time = ticker + time;
   freqout(4, 500, 3000);                      // Speaker tone: .5 s, 3 kHz 
-  low(26);                                    // D/A0 & D/A1 to 0 V 
+  low(26);                                    // D/A0 & D/A1 to 0 V for infrared
   low(27); 
   drive_setRampStep(10);                      // 10 ticks/sec / 20 ms
   while(drive_time - ticker > 0) 
@@ -180,7 +196,7 @@ void play_song_mhall()                      // play "Mary Had a Little Lamb"
   }     
 } 
 
-void sing_and_dance()
+void sing_and_dance()  // Move in place and play a little song
 {
   drive_speed(64, -64);
   pause(1000);
@@ -201,6 +217,7 @@ void sing_and_dance()
   drive_goto(104, -104);
 }  
 
+// maintain a set distance between the robot and an object
 void follow(volatile int time)
 {
   int distance, setPoint, errorVal, kp, speed;
@@ -275,3 +292,25 @@ void piano_bot(volatile int time)
     pause(70);                              // Pause before repeating
   }
 }   
+
+void drive_square(int side_length)
+{
+  for(int i=0; i<4; i++){                 // Drive for 4 sides of square
+    drive_goto(side_length, side_length); // Drive forward for side
+    pause(10);                            // Stop for a bit
+    drive_goto(26, -25);                  // Turn 90 to robot’s right
+    pause(10);                            // Stop for a bit 
+  }
+}
+
+void drive_3squares(int longest_side_length)
+{
+  int side = longest_side_length; // Define a variable for the length of the side
+  if(side < 120) side = 120;      // Ensure minimum side length of last square
+  for(int i=0; i<3; i++){        // Drive in a square 3 times
+    drive_square(side);
+    side = side - 50;  // Change the size of side so the next square is smaller}
+  }
+}  
+
+  
